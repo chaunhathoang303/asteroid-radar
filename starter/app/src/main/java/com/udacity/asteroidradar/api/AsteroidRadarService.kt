@@ -9,6 +9,8 @@ import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import retrofit2.converter.scalars.ScalarsConverterFactory
 import retrofit2.http.GET
+import retrofit2.http.Query
+import java.util.*
 
 private val moshi = Moshi.Builder()
     .add(KotlinJsonAdapterFactory())
@@ -25,14 +27,18 @@ private val nasaRetrofit = Retrofit.Builder()
     .build()
 
 interface AsteroidRadarApiService {
-    @GET("neo/rest/v1/feed?api_key=8udechMYeqV8WCwwnlKK9TGQjMICB7FaapveeDOp")
-    fun getProperties():
+    @GET("neo/rest/v1/feed")
+    fun getProperties(
+        @Query("start_date") startDate: String,
+        @Query("end_date") endDate: String,
+        @Query("api_key") apiKey: String
+    ):
             Call<String>
 }
 
 interface NaSaApiService {
-    @GET("planetary/apod?api_key=8udechMYeqV8WCwwnlKK9TGQjMICB7FaapveeDOp")
-    fun getNasaProperties():
+    @GET("planetary/apod")
+    fun getNasaProperties(@Query("api_key") apiKey: String):
             Call<PictureOfDay>
 }
 

@@ -1,9 +1,7 @@
 package com.udacity.asteroidradar.repository
 
-import android.util.Log
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.Transformations
-import com.udacity.asteroidradar.Asteroid
+import com.udacity.asteroidradar.Constants
 import com.udacity.asteroidradar.api.AsteroidRadarApi
 import com.udacity.asteroidradar.api.parseAsteroidsJsonResult
 import com.udacity.asteroidradar.database.AsteroidData
@@ -12,33 +10,43 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import retrofit2.await
+import java.text.SimpleDateFormat
+import java.util.*
 
 class AsteroidRepository(private val database: AsteroidDatabase) {
 
-    val listAsteroid: LiveData<List<Asteroid>> =
-        Transformations.map(database.asteroidDatabaseDao.getAllAsteroid()) {
-            it.map { data ->
-                Asteroid(
-                    data.asteroidId,
-                    data.codename,
-                    data.closeApproachDate,
-                    data.absoluteMagnitude,
-                    data.estimatedDiameter,
-                    data.relativeVelocity,
-                    data.distanceFromEarth,
-                    data.isPotentiallyHazardous,
-                )
-            }
-        }
+    val listAsteroid: LiveData<List<AsteroidData>> = database.asteroidDatabaseDao.getAllAsteroid()
 
-    suspend fun refreshData() {
+    fun getListAsteroidToday(): LiveData<List<AsteroidData>> {
+        val calendar = Calendar.getInstance()
+        val dateFormat = SimpleDateFormat(Constants.API_QUERY_DATE_FORMAT, Locale.getDefault())
+        val today = dateFormat.format(calendar.time)
+
+        return database.asteroidDatabaseDao.getAsteroidToday(today)
+    }
+
+    fun getListAsteroidWeek(): LiveData<List<AsteroidData>> {
+        val calendar = Calendar.getInstance()
+        val dateFormat = SimpleDateFormat(Constants.API_QUERY_DATE_FORMAT, Locale.getDefault())
+        calendar.add(Calendar.DAY_OF_YEAR, 1)
+        val startTime = dateFormat.format(calendar.time)
+        calendar.add(Calendar.DAY_OF_YEAR, 7)
+        val endTime = dateFormat.format(calendar.time)
+
+        return database.asteroidDatabaseDao.getAsteroidsThisWeek(startTime, endTime)
+    }
+
+
+    suspend fun refreshData(startDate: String, endDate: String, apiKey: String) {
         withContext(Dispatchers.IO) {
-            val listResult = AsteroidRadarApi.retrofitService.getProperties().await()
+            database.asteroidDatabaseDao.clear()
+            val listResult =
+                AsteroidRadarApi.retrofitService.getProperties(startDate, endDate, apiKey).await()
             val obj = JSONObject(listResult)
             val data = parseAsteroidsJsonResult(obj)
             val asteroidList = data.map { asteroid ->
                 AsteroidData(
-                    null,
+                    id = asteroid.id,
                     asteroid.id,
                     asteroid.codename,
                     asteroid.closeApproachDate,

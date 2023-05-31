@@ -3,12 +3,19 @@ package com.udacity.asteroidradar.main
 import android.app.Application
 import androidx.lifecycle.*
 import com.udacity.asteroidradar.Asteroid
+import com.udacity.asteroidradar.Constants
 import com.udacity.asteroidradar.PictureOfDay
+import com.udacity.asteroidradar.api.AsteroidRadarApi
 import com.udacity.asteroidradar.api.NasaApi
+import com.udacity.asteroidradar.api.parseAsteroidsJsonResult
+import com.udacity.asteroidradar.database.AsteroidData
 import com.udacity.asteroidradar.database.AsteroidDatabase.Companion.getInstance
 import com.udacity.asteroidradar.repository.AsteroidRepository
 import kotlinx.coroutines.launch
+import org.json.JSONObject
 import retrofit2.await
+import java.text.SimpleDateFormat
+import java.util.*
 
 class MainViewModel(
     application: Application
@@ -16,9 +23,33 @@ class MainViewModel(
 
     private val database = getInstance(application)
 
-    private val asteroidRepository = AsteroidRepository(database)
+    private val repository = AsteroidRepository(database)
 
-    val listAsteroid = asteroidRepository.listAsteroid
+    private val _filter = MutableLiveData("SAVED")
+
+    val listAsteroid: LiveData<List<Asteroid>> = Transformations.switchMap(_filter) { filter ->
+        Transformations.map(
+            when (filter) {
+                "TODAY" -> repository.getListAsteroidToday()
+                "WEEK" -> repository.getListAsteroidWeek()
+                "SAVED" -> repository.listAsteroid
+                else -> repository.listAsteroid
+            }
+        ) {
+            it.map { data ->
+                Asteroid(
+                    data.asteroidId,
+                    data.codename,
+                    data.closeApproachDate,
+                    data.absoluteMagnitude,
+                    data.estimatedDiameter,
+                    data.relativeVelocity,
+                    data.distanceFromEarth,
+                    data.isPotentiallyHazardous,
+                )
+            }
+        }
+    }
 
     private val _nasaResponse = MutableLiveData<PictureOfDay>()
 
@@ -31,7 +62,8 @@ class MainViewModel(
         get() = _navigateToDetail
 
     init {
-        getNasaProperty()
+        getNasaProperty(Constants.API_KEY)
+        getAsteroidProperty()
     }
 
     fun onAsteroidClicked(asteroid: Asteroid) {
@@ -42,10 +74,49 @@ class MainViewModel(
         _navigateToDetail.value = null
     }
 
-    private fun getNasaProperty() {
+    private fun getAsteroidProperty() {
         viewModelScope.launch {
             try {
-                val dataRes = NasaApi.nasaRetrofitService.getNasaProperties().await()
+                val calendar = Calendar.getInstance()
+                val dateFormat =
+                    SimpleDateFormat(Constants.API_QUERY_DATE_FORMAT, Locale.getDefault())
+                val today = dateFormat.format(calendar.time)
+                calendar.add(Calendar.DAY_OF_YEAR, 7)
+                val endDataOfWeek = dateFormat.format(calendar.time)
+                val dataResult = AsteroidRadarApi.retrofitService.getProperties(
+                    today,
+                    endDataOfWeek,
+                    Constants.API_KEY
+                ).await()
+                val obj = JSONObject(dataResult)
+                val data = parseAsteroidsJsonResult(obj)
+                val asteroidList = data.map { asteroid ->
+                    AsteroidData(
+                        id = asteroid.id,
+                        asteroid.id,
+                        asteroid.codename,
+                        asteroid.closeApproachDate,
+                        asteroid.absoluteMagnitude,
+                        asteroid.estimatedDiameter,
+                        asteroid.relativeVelocity,
+                        asteroid.distanceFromEarth,
+                        asteroid.isPotentiallyHazardous,
+                    )
+                }
+                for (asteroid in asteroidList) {
+                    database.asteroidDatabaseDao.insertAll(asteroid)
+                }
+
+            } catch (e: Exception) {
+
+            }
+        }
+    }
+
+    private fun getNasaProperty(apiKey: String) {
+        viewModelScope.launch {
+            try {
+                val dataRes = NasaApi.nasaRetrofitService.getNasaProperties(apiKey).await()
                 if (dataRes.mediaType == "image") {
                     _nasaResponse.value = dataRes
                 } else {
@@ -59,5 +130,15 @@ class MainViewModel(
                 _nasaResponse.value = null
             }
         }
+    }
+
+    fun updateFilter(filter: String) {
+        when (filter) {
+            "TODAY" -> _filter.value = "TODAY"
+            "WEEK" -> _filter.value = "WEEK"
+            "SAVED" -> _filter.value = "SAVED"
+            else -> _filter.value = "SAVED"
+        }
+
     }
 }

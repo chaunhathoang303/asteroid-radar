@@ -1,49 +1,37 @@
 package com.udacity.asteroidradar.main
 
 import android.os.Bundle
-import android.util.Log
 import android.view.*
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
-import com.udacity.asteroidradar.Asteroid
 import com.udacity.asteroidradar.R
-import com.udacity.asteroidradar.database.AsteroidDatabase
 import com.udacity.asteroidradar.databinding.FragmentMainBinding
 
 class MainFragment : Fragment() {
 
-//    private val viewModel: MainViewModel by lazy {
-//        ViewModelProvider(this).get(MainViewModel::class.java)
-//    }
+
+    private val viewModel: MainViewModel by lazy {
+        val application = requireNotNull(this.activity).application
+        val viewModelFactory = MainViewModelFactory(application)
+        ViewModelProvider(this, viewModelFactory).get(MainViewModel::class.java)
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        //val binding = FragmentMainBinding.inflate(inflater)
+
         val binding: FragmentMainBinding = DataBindingUtil.inflate(
             inflater, R.layout.fragment_main, container, false
         )
 
-        val application = requireNotNull(this.activity).application
-
-        val dataSource = AsteroidDatabase.getInstance(application).asteroidDatabaseDao
-
-        val viewModelFactory = MainViewModelFactory(application)
-
-        val viewModel =
-            ViewModelProvider(
-                this, viewModelFactory
-            ).get(MainViewModel::class.java)
 
         binding.viewModel = viewModel
 
         binding.lifecycleOwner = this
-
-        //binding.viewModel = viewModel
 
         setHasOptionsMenu(true)
 
@@ -65,7 +53,7 @@ class MainFragment : Fragment() {
                 viewModel.onAsteroidNavigated()
             }
         })
-
+        setHasOptionsMenu(true)
         return binding.root
     }
 
@@ -76,6 +64,14 @@ class MainFragment : Fragment() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        viewModel.updateFilter(
+            when (item.itemId) {
+                R.id.show_today -> "TODAY"
+                R.id.show_week -> "WEEK"
+                R.id.show_saved -> "SAVED"
+                else -> "SAVED"
+            }
+        )
         return true
     }
 }
