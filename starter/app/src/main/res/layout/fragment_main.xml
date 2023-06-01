@@ -27,8 +27,8 @@
                 android:id="@+id/activity_main_image_of_the_day"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:contentDescription="@null"
                 android:adjustViewBounds="true"
+                android:contentDescription="@string/image_of_the_day"
                 android:scaleType="centerCrop"
                 app:imageUrl="@{viewModel.nasaProperty.url}" />
 
