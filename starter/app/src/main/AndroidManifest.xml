@@ -20,6 +20,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <meta-data
+            android:name="YOUR_API_KEY_NAME"
+        android:value="${API_KEY_NAME}"/>
     </application>
 
 </manifest>

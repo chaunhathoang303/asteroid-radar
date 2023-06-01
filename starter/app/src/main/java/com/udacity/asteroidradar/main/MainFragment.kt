@@ -55,8 +55,6 @@ class MainFragment : Fragment() {
             }
         })
 
-        binding.activityMainImageOfTheDay.contentDescription = "Image of the Day"
-
         setHasOptionsMenu(true)
         return binding.root
     }

@@ -1,6 +1,8 @@
 package com.udacity.asteroidradar.work
 
 import android.content.Context
+import android.content.pm.ApplicationInfo
+import android.content.pm.PackageManager
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.udacity.asteroidradar.Constants
@@ -12,6 +14,9 @@ import java.util.*
 
 class RefreshDataWorker(appContext: Context, params: WorkerParameters) :
     CoroutineWorker(appContext, params) {
+    private val applicationInfo: ApplicationInfo = appContext.packageManager
+        .getApplicationInfo(appContext.packageName, PackageManager.GET_META_DATA)
+    private val apiKey = applicationInfo.metaData["YOUR_API_KEY_NAME"] as String
     override suspend fun doWork(): Result {
         val database = getInstance(applicationContext)
         val repository = AsteroidRepository(database)
@@ -24,7 +29,7 @@ class RefreshDataWorker(appContext: Context, params: WorkerParameters) :
         val nextTime = calendar.time
         val endDate = dateFormat.format(nextTime)
         return try {
-            repository.refreshData(startDate, endDate, Constants.API_KEY)
+            repository.refreshData(startDate, endDate, apiKey)
             Result.success()
         } catch (e: HttpException) {
             Result.retry()

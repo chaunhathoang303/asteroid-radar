@@ -1,6 +1,10 @@
 package com.udacity.asteroidradar.main
 
 import android.app.Application
+import android.content.pm.ApplicationInfo
+import android.content.pm.PackageManager
+
+
 import androidx.lifecycle.*
 import com.udacity.asteroidradar.Asteroid
 import com.udacity.asteroidradar.Constants
@@ -20,6 +24,10 @@ import java.util.*
 class MainViewModel(
     application: Application
 ) : ViewModel() {
+
+    private val applicationInfo: ApplicationInfo = application.packageManager
+        .getApplicationInfo(application.packageName, PackageManager.GET_META_DATA)
+    private val apiKey = applicationInfo.metaData["YOUR_API_KEY_NAME"] as String
 
     private val database = getInstance(application)
 
@@ -62,7 +70,7 @@ class MainViewModel(
         get() = _navigateToDetail
 
     init {
-        getNasaProperty(Constants.API_KEY)
+        getNasaProperty(apiKey)
         getAsteroidProperty()
     }
 
@@ -86,7 +94,7 @@ class MainViewModel(
                 val dataResult = AsteroidRadarApi.retrofitService.getProperties(
                     today,
                     endDataOfWeek,
-                    Constants.API_KEY
+                    apiKey
                 ).await()
                 val obj = JSONObject(dataResult)
                 val data = parseAsteroidsJsonResult(obj)
