@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import com.udacity.asteroidradar.R
 import com.udacity.asteroidradar.databinding.FragmentMainBinding
+import kotlinx.android.synthetic.main.fragment_main.view.*
 
 class MainFragment : Fragment() {
 
@@ -53,6 +54,9 @@ class MainFragment : Fragment() {
                 viewModel.onAsteroidNavigated()
             }
         })
+
+        binding.activityMainImageOfTheDay.contentDescription = "Image of the Day"
+
         setHasOptionsMenu(true)
         return binding.root
     }

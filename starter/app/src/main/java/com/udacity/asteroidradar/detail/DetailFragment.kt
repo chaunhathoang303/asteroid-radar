@@ -11,8 +11,10 @@ import com.udacity.asteroidradar.R
 import com.udacity.asteroidradar.databinding.FragmentDetailBinding
 
 class DetailFragment : Fragment() {
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
-                              savedInstanceState: Bundle?): View? {
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
         val binding = FragmentDetailBinding.inflate(inflater)
         binding.lifecycleOwner = this
 
@@ -23,6 +25,8 @@ class DetailFragment : Fragment() {
         binding.helpButton.setOnClickListener {
             displayAstronomicalUnitExplanationDialog()
         }
+
+        binding.activityMainImageOfTheDay.contentDescription = "Image of the day"
 
         return binding.root
     }
