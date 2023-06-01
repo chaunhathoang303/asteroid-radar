@@ -29,9 +29,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:adjustViewBounds="true"
+                tools:contentDescription="Asteroid Radar"
                 android:scaleType="centerCrop"
-                app:imageUrl="@{viewModel.nasaProperty.url}"
-                tools:ignore="ContentDescription" />
+                app:imageUrl="@{viewModel.nasaProperty.url}" />
 
             <TextView
                 android:id="@+id/textView"

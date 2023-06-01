@@ -53,7 +53,7 @@
             app:layout_constraintTop_toTopOf="@+id/textView2"
             app:srcCompat="@drawable/ic_status_potentially_hazardous"
             app:statusIcon="@{asteroid.potentiallyHazardous}"
-            tools:ignore="ContentDescription" />
+            tools:contentDesciption="Asteroid hazardous" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

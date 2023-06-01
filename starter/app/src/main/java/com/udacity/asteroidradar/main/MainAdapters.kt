@@ -26,7 +26,12 @@ class MainAdapter(private val clickListener: MainListener) :
         fun bind(clickListener: MainListener, item: Asteroid) {
             binding.asteroid = item
             binding.clickListener = clickListener
-            binding.imageView2.contentDescription = "Asteroid status"
+            if(item.isPotentiallyHazardous) {
+                binding.imageView2.contentDescription = "Asteroid hazardous"
+            } else {
+                binding.imageView2.contentDescription = "Asteroid not hazardous"
+            }
+
             binding.executePendingBindings()
         }
 
